@@ -107,11 +107,19 @@
   parent-position: "center",
   grow: 1,
   spread: 1,
+  pos: none,
   name: none
   ) = {
   assert(parent-position in ("begin", "center","end", "after-end"))
   assert(grow > 0)
   assert(spread > 0)
+
+  let (shift-x, shift-y) = if pos != none {
+    assert(type(pos) == array and pos.len() == 2, message: "pos must be an array (x,y)")
+    pos
+  } else {
+      (0,0)
+  }
 
   direction = (
     up: "north",
@@ -165,7 +173,8 @@
   //
   // return:
   //   (node, left-x, right-x)
-  let layout-node(node, shift-x) = {
+  let layout-node(node, shift-x, shift-y) = {
+    node.y += shift-y
     if node.children.len() == 0 {
       node.x = shift-x
       return (node, node.x, node.x)
@@ -178,7 +187,7 @@
         let child = node.children.at(i)
         let (child-min-x, child-max-x) = (none, none)
 
-        (child, child-min-x, child-max-x) = layout-node(child, shift-x)
+        (child, child-min-x, child-max-x) = layout-node(child, shift-x, shift-y)
         node.children.at(i) = child
 
         left = util.min(child.x, left)
@@ -274,7 +283,7 @@
   }
 
   let root = build-node(root)
-  let (nodes, ..) = layout-node(root, 0)
+  let (nodes, ..) = layout-node(root, shift-x, shift-y)
   let node = build-element(nodes, none)
 
   // Render node recursive
